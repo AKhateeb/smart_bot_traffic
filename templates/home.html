@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Smart Bot Traffic</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/css/mdb.min.css">
+        <link rel="stylesheet" href="/static/fonts/fontawesome-free/css/all.css">
+        <link rel="stylesheet" href="/static/css/addons/animate.css">
+        <link rel="stylesheet" href="/static/css/addons/iziToast.min.css">
+        
+    </head>
+
+    <body>
+        <div class="container mt-5 pt-5 px-2 z-depth-1">
+
+            <div class="text-center">
+                <!--Section: Content-->
+                <section class="text-center px-md-5 mx-md-5 dark-grey-text">
+                    <h2>Welcome to you in</h2>
+                    <h1 class="text-primary"> Smart Traffic Bot</h1>
+                    <br>
+                    <p>Kindly enter your desired pages and then click on start button</p>
+                </section>
+                <!--Section: Content-->
+            </div>
+            <hr>
+            <!-- Material form row -->
+            <form id="bot-form">
+                <!-- Grid row -->
+                <div class="form-row d-flex text-center">
+                    <!-- Grid column -->
+                    <div class="col-9">
+                        <!-- Material input -->
+                        <div class="md-form mt-0 ml-3 mr-1">
+                            <input type="url" style="font-size: x-large;" autocomplete="off" autofocus class="form-control" name="site_url" placeholder="Your URL Here">
+                        </div>
+                    </div>
+                    <!-- Grid column -->
+
+                    <!-- Grid column -->
+                    <div class="col-3">
+                        <!-- Material input -->
+                        <div class="md-form mt-0">
+                            <button type="submit" id="btn-start"
+                                class="btn btn-lg btn-primary waves-effect waves-light">
+                                <i class="fas fa-rocket pr-3" aria-hidden="true"></i>Start</button>
+                        </div>
+                    </div>
+                    <!-- Grid column -->
+                </div>
+                <!-- Grid row -->
+            </form>
+            <!-- Material form row -->
+
+            <div class="container d-flex" style="min-height: 400px;" id="blocks-container">
+                <div class="col-4 mb-1">
+                    <!-- Card -->
+                    <div class="card card-image mb-4" id="ad-block-left"
+                        style=" height: 300px; display: none;">
+                    </div>
+                    <!-- Card -->
+                </div>
+                <div class="col-4 mb-1">
+                    <!-- Card -->
+                    <div class="card card-cascade wider" style="display: none;" id="knob-container">
+                        <!-- Card content -->
+                        <div class="card-body card-body-cascade text-center">
+                            <input type="text" class="dial" value="0">
+                        </div>
+                        <!-- Card content -->
+                    </div>
+                    <!-- Card -->
+                </div>
+                <div class="col-4 mb-1">
+                    <!-- Card -->
+                    <div class="card card-image mb-4" id="ad-block-right"
+                        style=" height: 300px; display: none;">
+                    </div>
+                    <!-- Card -->
+                </div>
+            </div>
+            <div class="text-center">
+                <span class="alert alert-success"> <span class="fa fa-info-circle pr-1"></span> If you want to make sure that our automated visits are <b class="text-danger">NOT FAKE</b>, you can check server-logs at the web-server of the input URL</span>
+
+            </div>
+
+        </div>
+        <script src="/static/js/popper.min.js"></script>
+        <script src="/static/js/jquery.min.js"></script>
+        <script src="/static/js/bootstrap.min.js"></script>
+        <script src="/static/js/mdb.min.js"></script>
+        <script src="/static/js/addons/jquery.knob.js"></script>
+        <script src="/static/js/addons/iziToast.min.js"></script>
+        <script>
+            const ADS_TIMER = 6000;
+            const LIMIT = 50;
+
+            poll_interval = null;
+            ads_interval = null;
+            ads_images_list = []
+
+            function init() {
+                $("#knob-container").fadeOut(100);
+                $("#ad-block-left").fadeOut(100);
+                $("#ad-block-right").fadeOut(100);
+                $("#btn-start").removeAttr('disabled');
+            }
+
+            function update_knob(new_value) {
+                $('.dial')
+                    .val(new_value)
+                    .trigger('change');
+            }
+
+            function reset_and_show_ads() {
+                $("#btn-start").removeAttr('disabled');
+                $("#ad-block-left").slideDown(400);
+                $("#ad-block-right").slideDown(400);
+
+                clearInterval(poll_interval);
+
+                ads_interval = setInterval(() => {
+                    var rand_ad_1 = Math.floor(Math.random() * ads_images_list.length)
+                    var rand_ad_2 = Math.floor(Math.random() * ads_images_list.length)
+
+                    if (rand_ad_2 == rand_ad_1){
+                        rand_ad_2 = Math.min(rand_ad_2 +1, ads_images_list.length-1)
+                    }
+                    $("#ad-block-left").animate({
+                        'background-image': `url(${rand_ad_1})`
+                    }, 300)
+                    $("#ad-block-right")
+                        .animate({
+                            opacity: 0
+                        }, 'slow', function () {
+                            $(this)
+                                .css({
+                                    'background-image': `url(${ads_images_list[rand_ad_1]})`
+                                })
+                                .animate({
+                                    opacity: 1
+                                });
+                        });
+                    $("#ad-block-left")
+                        .animate({
+                            opacity: 0
+                        }, 'slow', function () {
+                            $(this)
+                                .css({
+                                    'background-image': `url(${ads_images_list[rand_ad_2]})`
+                                })
+                                .animate({
+                                    opacity: 1
+                                });
+                        });
+                }, ADS_TIMER);
+            }
+
+            function update_counter() {
+                $.get("/get_visits", {},
+                    function (response, textStatus, jqXHR) {
+                        // console.log(success_ips);
+                        if(!typeof response.succeeded_ips == "object") return
+
+                        let value = response.n_succeeded;
+                        if (value < LIMIT) {
+                            update_knob(value);
+                        } else {
+                            reset_and_show_ads();
+                            iziToast.success({
+                                title: value + " Visits",
+                                message: "are successfully done"
+                            });
+                        }
+                    },
+                    "json"
+                );
+            }
+
+            $(document).ready(function () {
+                $("#btn-start").click(function (e) {
+                    e.preventDefault();
+
+                    $.ajax({
+                        type: "GET",
+                        url: "/start_bot",
+                        data: {
+                            url: $("input[name=site_url]").val().trim()
+                        },
+                        dataType: "JSON",
+                        beforeSend: function (param) {
+                            $("#blocks-container").show(500);
+                            clearInterval(ads_interval);
+                            $("#ad-block-left").slideUp(400);
+                            $("#ad-block-right").slideUp(400);
+                            $("#btn-start").attr('disabled', "");
+                            $("input[name=site_url]").attr('disabled', "");
+                        },
+                        success: function (response, status_text, xhr) {
+                            if(xhr.status != 200) return
+
+                            iziToast.info({
+                                title: `${response.n_workers} Workers`,
+                                message: `have been launched to visit url`,
+                                timeout: 5000
+                            })
+
+                            iziToast.info({
+                                title: `${response.ads_list.length} Ads`,
+                                message: `found in the pre-defined folder`,
+                                timeout: 6000
+                            })
+
+                            ads_images_list = response.ads_list.map(e =>
+                                "/static/ads-images/" + e);
+
+                            $(".dial").knob({
+                                'change': function (v) {
+                                    console.log(v);
+                                },
+                                "value": 0,
+                                "min": 0,
+                                "max": LIMIT,
+                                "fgColor": "#007BFF",
+                                "skin": "tron",
+                                "cursor": false,
+                                // width: "90%",
+                                // height: "90%",
+                                rotation: "anticlockwise",
+                                angleOffset: -125,
+                                angleArc: 250,
+                                readOnly: true
+                            });
+                            $("#knob-container").slideDown(400);
+                            $("input[name=site_url]").removeClass('is-invalid').addClass("is-valid");
+
+                            poll_interval = setInterval(() => {
+                                update_counter();
+                            }, 3000);
+                        },
+                        error: function (error) {
+                            console.warn(error.responseText);
+                            if (error.responseText == "Invalid URL"){
+                                $("#btn-start").removeAttr('disabled');
+                                $("input[name=site_url]").removeAttr('disabled');
+                                $("input[name=site_url]").removeClass('is-valid').addClass("is-invalid");
+                                iziToast.error({
+                                    title: "Invalid URL",
+                                    message: $("input[name=site_url]").val().trim(),
+                                    timeout: 4500
+                                });
+                            }
+                        }
+                    });
+                });
+
+
+            });
+        </script>
+    </body>
+
+</html>
