@@ -91,7 +91,7 @@ def start_bot():
     with lock:
         total_visits = []
 
-    proxy_pool = cycle(get_free_proxies())
+    proxy_pool = cycle(get_proxies_from_file())
     proxy = proxy_pool.__next__()
 
     for i in range(1, LIMIT+1):
