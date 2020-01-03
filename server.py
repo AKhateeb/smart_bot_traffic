@@ -57,7 +57,7 @@ def do_visit(proxy, url, index, attempts = 1):
     if attempts > MAX_ATTEMPTS: return
     try:
         if attempts == 1:
-            time.sleep(random.randint(3,8))
+            time.sleep(index*2)
         print(f"[{index}].{attempts} Requesting ...")
         response = requests.get(url,proxies={"http": proxy, "https": proxy})
         if response.status_code == 200:
@@ -96,7 +96,7 @@ def start_bot():
 
     for i in range(1, LIMIT+1):
         #Get a proxy from the pool
-        visit = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i))
+        visit = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=True)
         visit.start()
     result['n_workers'] = i
     
