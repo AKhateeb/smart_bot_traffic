@@ -37,6 +37,7 @@ def get_proxies_from_file():
 
 def get_free_proxies(limit=20):
     url = 'https://free-proxy-list.net/'
+    print("Getting FREE proxies ...")
     from lxml.html import fromstring
     response = requests.get(url)
     parser = fromstring(response.text)
@@ -49,8 +50,8 @@ def get_free_proxies(limit=20):
 
 
 # proxy_pool = cycle(get_free_proxies())
-proxy_pool = list(get_free_proxies())
-# proxy_pool = list(get_proxies_from_file())
+# proxy_pool = list(get_free_proxies())
+proxy_pool = list(get_proxies_from_file())
 
 @app.route("/")
 def home():
@@ -122,6 +123,7 @@ def start_bot():
         for t in all_threads:
             t.join()
 
+    global proxy_pool 
     if request.args.get("free_ips", None):
         proxy_pool = list(get_proxies_from_file())
 
@@ -130,7 +132,7 @@ def start_bot():
     for i in range(1, LIMIT+10):
         #Get a proxy from the pool
         proxy = random.choice(proxy_pool)
-        visit_thread = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=True)
+        visit_thread = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=False)
         visit_thread.start()
         with lock:
             all_threads.append(visit_thread)
