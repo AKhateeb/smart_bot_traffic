@@ -4,7 +4,6 @@ from requests.exceptions import ProxyError
 
 # from itertools import cycle
 from threading import Lock, Thread
-import ipaddress
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
