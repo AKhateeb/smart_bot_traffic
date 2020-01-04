@@ -175,7 +175,7 @@
                         // console.log(success_ips);
                         if (!typeof response.succeeded_ips == "object") return
                         let value = response.n_succeeded;
-                        if (value < 1) return
+                        if (value < $(".dial").val()) return
 
                         $("#succeeded_ip_container > .succeeded_ip_text").html(
                             response.succeeded_ips.join('<b class="text-danger px-2">|</b>'));

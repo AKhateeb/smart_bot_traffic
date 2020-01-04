@@ -47,8 +47,8 @@ def get_free_proxies(limit=20):
 
 
 # proxy_pool = cycle(get_free_proxies())
-# proxy_pool = list(get_free_proxies())
-proxy_pool = list(get_proxies_from_file())
+proxy_pool = list(get_free_proxies())
+# proxy_pool = list(get_proxies_from_file())
 
 @app.route("/")
 def home():
