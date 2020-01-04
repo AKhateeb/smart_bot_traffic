@@ -22,6 +22,7 @@ CONN_ERR_SLEEP = 3
 
 global total_visits, proxy_pool
 
+all_threads = []
 total_visits = []
 lock = Lock()
 
@@ -116,17 +117,21 @@ def start_bot():
     with lock:
         global total_visits
         total_visits = []
+        for t in all_threads:
+            t.join()
 
     # proxy_pool = cycle(get_free_proxies())
 
     for i in range(1, LIMIT+10):
         #Get a proxy from the pool
         proxy = random.choice(proxy_pool)
-        visit = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=True)
-        visit.start()
+        visit_thread = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=True)
+        visit_thread.start()
+        with lock:
+            all_threads.append(visit_thread)
     result['n_workers'] = LIMIT
     
     return Response(response=json.dumps(result), status=200)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=80)

@@ -126,7 +126,7 @@
 
             function reset_and_show_ads() {
                 
-                $("#btn-start").removeAttr('disabled');
+                // $("#btn-start").removeAttr('disabled');
                 $("#ad-block-left").slideDown(400);
                 $("#ad-block-right").slideDown(400);
 
@@ -179,6 +179,7 @@
                             response.succeeded_ips.join('<b class="text-danger px-2">|</b>'));
 
                         let value = response.n_succeeded;
+                        if (value < 1) return
                         update_knob(value);
                         
                         if (value >= LIMIT) {
@@ -269,6 +270,7 @@
                                     message: $("input[name=site_url]").val().trim(),
                                     timeout: 4500
                                 });
+                                $("input[name=site_url]").focus();
                             }
                         }
                     });
