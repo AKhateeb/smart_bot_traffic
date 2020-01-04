@@ -85,7 +85,9 @@ def do_visit(proxy, url, index, attempts = 1):
         response = requests.get(
             url,
             verify=False, # to avoid SSLError
-            proxies={"http": proxy, "https": proxy}, )
+            proxies={"http": proxy, "https": proxy}, 
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+        )
         if response.status_code == 200:
             print(f"[{proxy.ljust(14)}] ----> SUCCEEDED, No:{index}.{attempts}")
             with lock:
