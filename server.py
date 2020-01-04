@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, Response
 import os, json, random, requests, time, logging
 from requests.exceptions import ProxyError
+from threading import Lock, Thread
 
 random.seed(454854545)
 
 # from itertools import cycle
-from threading import Lock, Thread
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -22,7 +22,7 @@ LIMIT = 50
 MAX_ATTEMPTS = 10
 CONN_ERR_SLEEP = 3
 
-global total_visits, proxy_pool
+global total_visits, proxy_pool, all_threads
 
 all_threads = []
 total_visits = []
@@ -118,10 +118,10 @@ def start_bot():
         return Response(response="Invalid URL", status=400)
 
     with lock:
-        global total_visits
+        global total_visits, all_threads
         total_visits = []
-        for t in all_threads:
-            t.join()
+        # for t in all_threads:
+        #     t.join() # we don't need to wait for previous threads
 
     global proxy_pool 
     if request.args.get("free_ips", None):
@@ -132,9 +132,10 @@ def start_bot():
     for i in range(1, LIMIT+10):
         #Get a proxy from the pool
         proxy = random.choice(proxy_pool)
-        visit_thread = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=False)
+        visit_thread = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=True) # Must be True to let it work in background
         visit_thread.start()
         with lock:
+            global all_threads
             all_threads.append(visit_thread)
     result['n_workers'] = LIMIT
     
