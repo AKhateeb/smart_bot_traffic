@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, Response
 import os, json, random, requests, time, logging
 from requests.exceptions import ProxyError
 
+random.seed(454854545)
+
 # from itertools import cycle
 from threading import Lock, Thread
 
@@ -119,6 +121,9 @@ def start_bot():
         total_visits = []
         for t in all_threads:
             t.join()
+
+    if request.args.get("free_ips", None):
+        proxy_pool = list(get_proxies_from_file())
 
     # proxy_pool = cycle(get_free_proxies())
 
