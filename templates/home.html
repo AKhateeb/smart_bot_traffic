@@ -12,7 +12,7 @@
         <link rel="stylesheet" href="/static/fonts/fontawesome-free/css/all.css">
         <link rel="stylesheet" href="/static/css/addons/animate.css">
         <link rel="stylesheet" href="/static/css/addons/iziToast.min.css">
-        
+
     </head>
 
     <body>
@@ -37,7 +37,8 @@
                     <div class="col-9">
                         <!-- Material input -->
                         <div class="md-form mt-0 ml-3 mr-1">
-                            <input type="url" style="font-size: x-large;" autocomplete="off" autofocus class="form-control" name="site_url" placeholder="Your URL Here">
+                            <input type="url" style="font-size: x-large;" autocomplete="off" autofocus
+                                class="form-control" name="site_url" placeholder="Your URL Here">
                         </div>
                     </div>
                     <!-- Grid column -->
@@ -47,7 +48,7 @@
                         <!-- Material input -->
                         <div class="md-form mt-0">
                             <button type="submit" id="btn-start"
-                                class="btn btn-lg btn-primary waves-effect waves-light">
+                                class="btn btn-x-large btn-primary waves-effect waves-light">
                                 <i class="fas fa-rocket pr-3" aria-hidden="true"></i>Start</button>
                         </div>
                     </div>
@@ -60,8 +61,7 @@
             <div class="container d-flex" style="min-height: 400px;" id="blocks-container">
                 <div class="col-4 mb-1">
                     <!-- Card -->
-                    <div class="card card-image mb-4" id="ad-block-left"
-                        style=" height: 300px; display: none;">
+                    <div class="card card-image mb-4" id="ad-block-left" style="background-image:url(/static/ads-images/default.png); height: 300px; display: none;">
                     </div>
                     <!-- Card -->
                 </div>
@@ -73,21 +73,27 @@
                             <input type="text" class="dial" value="0">
                         </div>
                         <!-- Card content -->
+                        <span class="text-primary text-center h2">Number of visits</span>
                     </div>
                     <!-- Card -->
                 </div>
                 <div class="col-4 mb-1">
                     <!-- Card -->
-                    <div class="card card-image mb-4" id="ad-block-right"
-                        style=" height: 300px; display: none;">
+                    <div class="card card-image mb-4" id="ad-block-right" style="background-image:url(/static/ads-images/default.png); height: 300px; display: none;">
                     </div>
                     <!-- Card -->
                 </div>
             </div>
             <div class="text-center">
-                <span class="alert alert-success"> <span class="fa fa-info-circle pr-1"></span> If you want to make sure that our automated visits are <b class="text-danger">NOT FAKE</b>, you can check server-logs at the web-server of the input URL</span>
-
+                <span class="alert alert-success"> <span class="fa fa-info-circle pr-1"></span> If you want to make sure
+                    that our automated visits are <b class="text-danger">NOT FAKE</b>, you can check server-logs at the
+                    web-server of your input URL</span>
             </div>
+            <div class="alert alert-primary py-2 px-4 mt-3" id="succeeded_ip_container" style="display: none;">
+                <span class="fa fa-check-square pr-1"></span><b>Succeeded IPs:</b>
+                <span class="succeeded_ip_text" style="word-break: break-all;"></span>
+            </div>
+
 
         </div>
         <script src="/static/js/popper.min.js"></script>
@@ -97,19 +103,20 @@
         <script src="/static/js/addons/jquery.knob.js"></script>
         <script src="/static/js/addons/iziToast.min.js"></script>
         <script>
-            const ADS_TIMER = 6000;
+            const ADS_TIMER = 7000;
+            const GET_VISITS_TIMER = 1800;
             const LIMIT = 50;
 
             poll_interval = null;
             ads_interval = null;
             ads_images_list = []
 
-            function init() {
-                $("#knob-container").fadeOut(100);
-                $("#ad-block-left").fadeOut(100);
-                $("#ad-block-right").fadeOut(100);
-                $("#btn-start").removeAttr('disabled');
-            }
+            // function init() {
+            //     $("#knob-container").fadeOut(100);
+            //     $("#ad-block-left").fadeOut(100);
+            //     $("#ad-block-right").fadeOut(100);
+            //     $("#btn-start").removeAttr('disabled');
+            // }
 
             function update_knob(new_value) {
                 $('.dial')
@@ -118,6 +125,7 @@
             }
 
             function reset_and_show_ads() {
+                
                 $("#btn-start").removeAttr('disabled');
                 $("#ad-block-left").slideDown(400);
                 $("#ad-block-right").slideDown(400);
@@ -128,12 +136,12 @@
                     var rand_ad_1 = Math.floor(Math.random() * ads_images_list.length)
                     var rand_ad_2 = Math.floor(Math.random() * ads_images_list.length)
 
-                    if (rand_ad_2 == rand_ad_1){
-                        rand_ad_2 = Math.min(rand_ad_2 +1, ads_images_list.length-1)
+                    if (rand_ad_2 == rand_ad_1) {
+                        rand_ad_2 = Math.min(rand_ad_2 + 1, ads_images_list.length - 1)
                     }
-                    $("#ad-block-left").animate({
-                        'background-image': `url(${rand_ad_1})`
-                    }, 300)
+
+                    console.log(ads_images_list[rand_ad_1]);
+                
                     $("#ad-block-right")
                         .animate({
                             opacity: 0
@@ -165,17 +173,26 @@
                 $.get("/get_visits", {},
                     function (response, textStatus, jqXHR) {
                         // console.log(success_ips);
-                        if(!typeof response.succeeded_ips == "object") return
+                        if (!typeof response.succeeded_ips == "object") return
+
+                        $("#succeeded_ip_container > .succeeded_ip_text").html(
+                            response.succeeded_ips.join('<b class="text-danger px-2">|</b>'));
 
                         let value = response.n_succeeded;
-                        if (value < LIMIT) {
-                            update_knob(value);
-                        } else {
+                        update_knob(value);
+                        
+                        if (value >= LIMIT) {
                             reset_and_show_ads();
                             iziToast.success({
                                 title: value + " Visits",
                                 message: "are successfully done"
                             });
+                            iziToast.info({
+                                title: `${ads_images_list.length} Ads`,
+                                message: `found in the pre-defined folder`,
+                                timeout: 8000
+                            })
+                            update_knob(value);
                         }
                     },
                     "json"
@@ -202,18 +219,12 @@
                             $("input[name=site_url]").attr('disabled', "");
                         },
                         success: function (response, status_text, xhr) {
-                            if(xhr.status != 200) return
+                            if (xhr.status != 200) return
 
                             iziToast.info({
                                 title: `${response.n_workers} Workers`,
                                 message: `have been launched to visit url`,
                                 timeout: 5000
-                            })
-
-                            iziToast.info({
-                                title: `${response.ads_list.length} Ads`,
-                                message: `found in the pre-defined folder`,
-                                timeout: 6000
                             })
 
                             ads_images_list = response.ads_list.map(e =>
@@ -237,18 +248,22 @@
                                 readOnly: true
                             });
                             $("#knob-container").slideDown(400);
-                            $("input[name=site_url]").removeClass('is-invalid').addClass("is-valid");
+                            $("input[name=site_url]").removeClass('is-invalid').addClass(
+                                "is-valid");
+                            $("#succeeded_ip_container").slideDown(400);
+
 
                             poll_interval = setInterval(() => {
                                 update_counter();
-                            }, 5000);
+                            }, GET_VISITS_TIMER);
                         },
                         error: function (error) {
                             console.warn(error.responseText);
-                            if (error.responseText == "Invalid URL"){
+                            if (error.responseText == "Invalid URL") {
                                 $("#btn-start").removeAttr('disabled');
                                 $("input[name=site_url]").removeAttr('disabled');
-                                $("input[name=site_url]").removeClass('is-valid').addClass("is-invalid");
+                                $("input[name=site_url]").removeClass('is-valid').addClass(
+                                    "is-invalid");
                                 iziToast.error({
                                     title: "Invalid URL",
                                     message: $("input[name=site_url]").val().trim(),
