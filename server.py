@@ -3,7 +3,7 @@ import os, json, random, requests, time, logging
 from requests.exceptions import ProxyError
 from threading import Lock, Thread
 
-random.seed(454854545)
+random.seed(454)
 
 # from itertools import cycle
 
@@ -46,12 +46,15 @@ def get_free_proxies(limit=20):
         if i.xpath('.//td[7][contains(text(),"yes")]'):
             proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
             proxies.add(proxy)
+    if len(proxies) < 1:
+        print("Failed to get FREE proxies ... getting from file")
+        proxies = list(get_proxies_from_file())
     return proxies
 
 
 # proxy_pool = cycle(get_free_proxies())
-proxy_pool = list(get_free_proxies())
-# proxy_pool = list(get_proxies_from_file())
+# proxy_pool = list(get_free_proxies())
+proxy_pool = list(get_proxies_from_file())
 
 @app.route("/")
 def home():
@@ -129,7 +132,7 @@ def start_bot():
 
     # proxy_pool = cycle(get_free_proxies())
 
-    for i in range(1, LIMIT+10):
+    for i in range(1, LIMIT+150):
         #Get a proxy from the pool
         proxy = random.choice(proxy_pool)
         visit_thread = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=True) # Must be True to let it work in background
