@@ -2,10 +2,10 @@ from flask import Flask, render_template, request, Response
 import os, json, random, requests, time, logging
 from requests.exceptions import ProxyError
 from threading import Lock, Thread
+from itertools import cycle
 
 random.seed(454)
 
-# from itertools import cycle
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -52,9 +52,9 @@ def get_free_proxies(limit=20):
     return proxies
 
 
-# proxy_pool = cycle(get_free_proxies())
+proxy_pool = cycle(get_free_proxies())
 # proxy_pool = list(get_free_proxies())
-proxy_pool = list(get_proxies_from_file())
+# proxy_pool = list(get_proxies_from_file())
 
 @app.route("/")
 def home():
