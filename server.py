@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, Response
 import os, json, random, requests, time, logging
 from requests.exceptions import ProxyError
 from threading import Lock, Thread
-from itertools import cycle
+# from itertools import cycle
 
 random.seed(454)
 
@@ -35,7 +35,7 @@ def get_proxies_from_file():
     validated_ips = [ip.strip() for ip in all_ips]
     return validated_ips
 
-def get_free_proxies(limit=20):
+def get_free_proxies(limit=100):
     url = 'https://free-proxy-list.net/'
     print("Getting FREE proxies ...")
     from lxml.html import fromstring
@@ -46,19 +46,33 @@ def get_free_proxies(limit=20):
         if i.xpath('.//td[7][contains(text(),"yes")]'):
             proxy = ":".join([i.xpath('.//td[1]/text()')[0], i.xpath('.//td[2]/text()')[0]])
             proxies.add(proxy)
+    
     if len(proxies) < 1:
         print("Failed to get FREE proxies ... getting from file")
         proxies = list(get_proxies_from_file())
+    print(len(proxies), " proxies are fetched!")
     return proxies
 
 
-proxy_pool = cycle(get_free_proxies())
+# proxy_pool = cycle(get_free_proxies())
 # proxy_pool = list(get_free_proxies())
 # proxy_pool = list(get_proxies_from_file())
 
 @app.route("/")
 def home():
     return render_template("home.html")
+    # return "Hello, World!"
+    
+
+@app.route("/output")
+def get_output():
+    output = ""
+    try:
+        with open("visits_output.txt", "r") as f:
+            output = f.readlines() 
+    except Exception as exp:
+        print(exp)
+    return output
     # return "Hello, World!"
     
 @app.route("/get_visits")
@@ -133,8 +147,9 @@ def start_bot():
         proxy_pool = list(get_proxies_from_file())
 
     # proxy_pool = cycle(get_free_proxies())
+    proxy_pool = list(get_free_proxies())
 
-    for i in range(1, LIMIT+150):
+    for i in range(1, LIMIT):
         #Get a proxy from the pool
         proxy = random.choice(proxy_pool)
         visit_thread = Thread(target=do_visit, name="t_" + str(i), args=(proxy, url, i), daemon=True) # Must be True to let it work in background
@@ -147,4 +162,4 @@ def start_bot():
     return Response(response=json.dumps(result), status=200)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=80)
+    app.run(debug=True, port=8080)
